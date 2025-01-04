@@ -1,0 +1,9 @@
+numpy
+pandas
+streamlit
+pickle
+pip
+ultralytics
+cv2
+easyocr
+re
