@@ -1,6 +1,6 @@
 numpy
 pandas
-streamlit==1.19.0
+streamlit
 pip
 ultralytics
 opencv-python
