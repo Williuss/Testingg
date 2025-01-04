@@ -6,13 +6,10 @@ import easyocr
 import re
 
 def gocr(img, d):
-    x = int(d[0])
-    y = int(d[1])
-    w = int(d[2])
-    h = int(d[3])
+    x, y, w, h = int(d[0]), int(d[1]), int(d[2]), int(d[3])
 
-    img = img[y:h, x:w]
-    gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    cropped_img = img[y:h, x:w]
+    gray = cv2.cvtColor(cropped_img, cv2.COLOR_RGB2GRAY)
     res = reader.readtext(gray)
 
     max_area = 0
@@ -39,9 +36,11 @@ def gocr(img, d):
 
     return best_text
 
+# Model and OCR Reader
 car_model = YOLO("best.pt")
 reader = easyocr.Reader(["en"])
 
+# Predefined data
 bank_accounts = {
     "E2101PAD": 100000,
     "B2540BFA": 50000,
@@ -56,26 +55,17 @@ bank_accounts = {
 }
 toll_fee = 16000
 
+# Streamlit app
 st.title("Automatic Toll Payment System")
 
-# Hide disclaimer when stream is active
+# Disclaimer section
 if not st.session_state.get("stream_active", False):
-    st.markdown("""
+    st.markdown(
+        """
         <style>
-            .disclaimer {
-                font-size: 16px;
-                color: red;  /* Red color for the disclaimer title */
-                margin-bottom: 20px;
-            }
-            .disclaimer-title {
-                font-weight: bold;
-            }
-            .disclaimer-text {
-                color: white;  /* White color for the disclaimer text */
-            }
-            ul {
-                color: white;  /* White color for the list items */
-            }
+            .disclaimer { font-size: 16px; color: red; margin-bottom: 20px; }
+            .disclaimer-title { font-weight: bold; }
+            .disclaimer-text, ul { color: white; }
         </style>
         <div class="disclaimer">
             <span class="disclaimer-title">Disclaimer:</span> 
@@ -90,35 +80,37 @@ if not st.session_state.get("stream_active", False):
                 <li>After conducting extensive tests, we realized that the webcam quality has a significant impact on the OCR process for license plates. A better-quality webcam will result in more accurate OCR results.</li>
             </ul>
         </div>
-    """, unsafe_allow_html=True)
+        """,
+        unsafe_allow_html=True
+    )
 
+# Sidebar
 st.sidebar.title("Control Panel")
-
-# Added guidance for user on stream process
-st.sidebar.markdown("""
+st.sidebar.markdown(
+    """
     **To start plate detection and recognition:**
     - Click on **Start Stream** to begin the process. You will be asked to grant access to your webcam.
     - Once a license plate that meets the conditions is detected, click **Stop Stream** to view the results.
     - If the detected plate matches one in the database, the toll fee will be deducted from the associated balance.
-""")
+    """
+)
 
-start_stream = st.sidebar.button("Start Stream", key="start_stream")
-stop_stream = st.sidebar.button("Stop Stream", key="stop_stream")
+start_stream = st.sidebar.button("Start Stream")
+stop_stream = st.sidebar.button("Stop Stream")
 
 plate_placeholder = st.sidebar.empty()
 
 if "stream_active" not in st.session_state:
-    st.session_state.stream_active = False
+    st.session_state["stream_active"] = False
 if "detected_texts" not in st.session_state:
-    st.session_state.detected_texts = {}
+    st.session_state["detected_texts"] = {}
 
 if start_stream:
-    st.session_state.stream_active = True
-
+    st.session_state["stream_active"] = True
 if stop_stream:
-    st.session_state.stream_active = False
+    st.session_state["stream_active"] = False
 
-if st.session_state.stream_active:
+if st.session_state["stream_active"]:
     video_source = 0
     cap = cv2.VideoCapture(video_source)
     stframe = st.empty()
@@ -128,7 +120,7 @@ if st.session_state.stream_active:
     else:
         st.info("Streaming... Click 'Stop Stream' to end.")
 
-    while cap.isOpened() and st.session_state.stream_active:
+    while cap.isOpened() and st.session_state["stream_active"]:
         ret, frame = cap.read()
         if not ret:
             st.warning("End of video stream or cannot fetch the frame.")
@@ -141,10 +133,10 @@ if st.session_state.stream_active:
                 detected_text = gocr(frame, [x1, y1, x2, y2])
 
                 if re.match(r"^[A-Z]{1,2}\d{1,4}[A-Z]{1,3}$", detected_text):
-                    if detected_text in st.session_state.detected_texts:
-                        st.session_state.detected_texts[detected_text] += 1
+                    if detected_text in st.session_state["detected_texts"]:
+                        st.session_state["detected_texts"][detected_text] += 1
                     else:
-                        st.session_state.detected_texts[detected_text] = 1
+                        st.session_state["detected_texts"][detected_text] = 1
 
                 cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
                 cv2.putText(frame, detected_text, (int(x1), int(y1) - 10),
@@ -154,9 +146,9 @@ if st.session_state.stream_active:
 
     cap.release()
     cv2.destroyAllWindows()
-    
-if not st.session_state.stream_active and stop_stream:
-    detected_texts = st.session_state.detected_texts
+
+if not st.session_state["stream_active"] and stop_stream:
+    detected_texts = st.session_state["detected_texts"]
     if detected_texts:
         most_frequent_plate = max(detected_texts, key=detected_texts.get)
         st.sidebar.subheader("Most Frequent Detected Plate:")
