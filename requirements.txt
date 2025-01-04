@@ -3,6 +3,6 @@ pandas
 streamlit
 pip
 ultralytics
-cv2
+opencv-python
 easyocr
 re
