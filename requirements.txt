@@ -1,7 +1,9 @@
-numpy
-pandas
-streamlit
-pip
-ultralytics
-opencv-python
-easyocr
+numpy==1.25.2
+pandas==2.1.4
+streamlit==1.36.0
+pip==24.3.1
+ultralytics==8.3.31
+opencv-python==4.10.0.84
+opencv-contrib-python==4.10.0.84
+opencv-python-headless==4.10.0.84
+easyocr==1.7.2
